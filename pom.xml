@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.gradoop</groupId>
+    <artifactId>gradoop-generators</artifactId>
+    <version>0.4.1</version>
+    <packaging>jar</packaging>
+
+    <name>Gradoop Generators</name>
+    <url>http://www.gradoop.org</url>
+    <description>Data Generators for Gradoop</description>
+    <inceptionYear>2014 - 2018</inceptionYear>
+
+    <organization>
+        <name>University of Leipzig</name>
+        <url>http://dbs.uni-leipzig.de/en</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>Apache 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <distributionManagement>
+        <repository>
+            <id>dbleipzig</id>
+            <url>https://wdiserv1.informatik.uni-leipzig.de:443/archiva/repository/dbleipzig/</url>
+        </repository>
+    </distributionManagement>
+
+    <scm>
+        <url>http://github.com/dbs-leipzig/gradoop-generators.git</url>
+        <connection>scm:git:git@github.com:dbs-leipzig/gradoop-generators.git</connection>
+        <developerConnection>
+            scm:git:dbs-leipzig@github.com/dbs-leipzig/gradoop-generators.git
+        </developerConnection>
+    </scm>
+
+    <repositories>
+        <repository>
+            <id>dbleipzig</id>
+            <url>https://wdiserv1.informatik.uni-leipzig.de:443/archiva/repository/dbleipzig/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.maven.version>3.0.0</project.maven.version>
+        <project.build.targetJdk>1.8</project.build.targetJdk>
+        <dep.commons-io.version>2.4</dep.commons-io.version>
+        <dep.flink.version>1.5.0</dep.flink.version>
+        <dep.guava.version>12.0.1</dep.guava.version>
+        <dep.jettison.version>1.3.7</dep.jettison.version>
+        <dep.junit.version>4.11</dep.junit.version>
+        <plugin.maven-compiler.version>3.5.1</plugin.maven-compiler.version>
+        <plugin.maven-checkstyle.version>2.16</plugin.maven-checkstyle.version>
+        <plugin.maven-findbugs.version>3.0.1</plugin.maven-findbugs.version>
+        <plugin.maven-jar.version>2.3.2</plugin.maven-jar.version>
+        <plugin.maven-source.version>3.0.1</plugin.maven-source.version>
+        <plugin.maven-javadoc.version>3.0.1</plugin.maven-javadoc.version>
+        <license.licenseName>apache_v2</license.licenseName>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${plugin.maven-compiler.version}</version>
+                <configuration>
+                    <source>${project.build.targetJdk}</source>
+                    <target>${project.build.targetJdk}</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${plugin.maven-checkstyle.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.gradoop</groupId>
+                        <artifactId>gradoop-checkstyle</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <configLocation>gradoop/checkstyle.xml</configLocation>
+                    <headerLocation>gradoop/LICENSE.txt</headerLocation>
+                    <includeResources>false</includeResources>
+                    <includeTestResources>false</includeTestResources>
+                    <suppressionsLocation>
+                        gradoop/checkstyle-suppressions.xml
+                    </suppressionsLocation>
+                    <suppressionsFileExpression>
+                        checkstyle.suppressions.file
+                    </suppressionsFileExpression>
+                    <failsOnError>true</failsOnError>
+                    <consoleOutput>true</consoleOutput>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <version>${plugin.maven-findbugs.version}</version>
+                <configuration>
+                    <xmlOutput>true</xmlOutput>
+                    <findbugsXmlOutput>false</findbugsXmlOutput>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${plugin.maven-jar.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>3.0</version>
+                <configuration>
+                    <header>com/mycila/maven/plugin/license/templates/APACHE-2.txt</header>
+                    <properties>
+                        <owner>Leipzig University</owner>
+                        <email>Database Research Group</email>
+                    </properties>
+                    <excludes>
+                        <exclude>**/README</exclude>
+                        <exclude>**/LICENSE</exclude>
+                        <exclude>**/checkstyle.xml</exclude>
+                        <exclude>**/pom.xml</exclude>
+                        <exclude>src/test/resources/**</exclude>
+                        <exclude>src/main/resources/**</exclude>
+                        <exclude>**/dev-support/**</exclude>
+                    </excludes>
+                    <mapping>
+                        <java>SLASHSTAR_STYLE</java>
+                    </mapping>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <!-- Flink -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-java</artifactId>
+            <version>${dep.flink.version}</version>
+        </dependency>
+
+        <!-- Gradoop -->
+        <dependency>
+            <groupId>org.gradoop</groupId>
+            <artifactId>gradoop-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.gradoop</groupId>
+            <artifactId>gradoop-flink</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Additional dependencies -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${dep.commons-io.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${dep.guava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jettison</groupId>
+            <artifactId>jettison</artifactId>
+            <version>${dep.jettison.version}</version>
+        </dependency>
+
+        <!-- Test dependencies -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${dep.junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-test-utils_2.11</artifactId>
+            <version>${dep.flink.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.gradoop</groupId>
+            <artifactId>gradoop-flink</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
