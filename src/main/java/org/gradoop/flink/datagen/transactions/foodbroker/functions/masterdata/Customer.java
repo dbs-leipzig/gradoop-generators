@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 package org.gradoop.flink.datagen.transactions.foodbroker.functions.masterdata;
 
 import org.apache.flink.configuration.Configuration;
-import org.gradoop.common.model.impl.pojo.Vertex;
-import org.gradoop.common.model.impl.pojo.VertexFactory;
+import org.gradoop.common.model.api.entities.VertexFactory;
+import org.gradoop.common.model.impl.pojo.EPGMVertex;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerAcronyms;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerBroadcastNames;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerConfig;
@@ -51,12 +51,11 @@ public class Customer extends BusinessRelation {
 
   /**
    * Valued constructor.
-   *
-   * @param vertexFactory EPGM vertex factory
+   *  @param epgmVertexFactory EPGM vertex factory
    * @param foodBrokerConfig FoodBroker configuration.
    */
-  public Customer(VertexFactory vertexFactory, FoodBrokerConfig foodBrokerConfig) {
-    super(vertexFactory, foodBrokerConfig);
+  public Customer(VertexFactory<EPGMVertex> epgmVertexFactory, FoodBrokerConfig foodBrokerConfig) {
+    super(epgmVertexFactory, foodBrokerConfig);
   }
 
   @Override
@@ -71,10 +70,10 @@ public class Customer extends BusinessRelation {
   }
 
   @Override
-  public Vertex map(MasterDataSeed seed) throws  Exception {
+  public EPGMVertex map(MasterDataSeed seed) throws  Exception {
     //set rnd name
     Random random = new Random();
-    Vertex vertex = super.map(seed);
+    EPGMVertex vertex = super.map(seed);
     vertex.setProperty(
       FoodBrokerPropertyKeys.NAME_KEY, adjectives.get(random.nextInt(adjectiveCount)) + " " +
       nouns.get(random.nextInt(nounCount)));

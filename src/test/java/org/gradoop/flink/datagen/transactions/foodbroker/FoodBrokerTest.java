@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,14 @@ import com.google.common.collect.Sets;
 import org.apache.flink.api.java.DataSet;
 import org.codehaus.jettison.json.JSONException;
 import org.gradoop.common.model.impl.id.GradoopId;
-import org.gradoop.common.model.impl.pojo.Edge;
-import org.gradoop.common.model.impl.pojo.Vertex;
+import org.gradoop.common.model.impl.pojo.EPGMEdge;
+import org.gradoop.common.model.impl.pojo.EPGMVertex;
 import org.gradoop.common.model.impl.properties.PropertyValue;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerConfig;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerEdgeLabels;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerVertexLabels;
 import org.gradoop.flink.model.GradoopFlinkTestBase;
-import org.gradoop.flink.model.api.epgm.GraphCollection;
+import org.gradoop.flink.model.impl.epgm.GraphCollection;
 import org.gradoop.flink.model.impl.functions.epgm.ByLabel;
 import org.gradoop.flink.model.impl.functions.epgm.ByProperty;
 import org.gradoop.flink.model.impl.layouts.transactional.tuples.GraphTransaction;
@@ -53,7 +53,7 @@ public class FoodBrokerTest extends GradoopFlinkTestBase {
   @Test
   public void testSalesQuotationLineCount() throws IOException, JSONException {
     generateCollection();
-    DataSet<Vertex> salesQuotationLines = cases.getVertices()
+    DataSet<EPGMVertex> salesQuotationLines = cases.getVertices()
       .filter(new ByLabel<>("SalesQuotationLine"));
     int min = 1;
     int max = 20;
@@ -73,9 +73,9 @@ public class FoodBrokerTest extends GradoopFlinkTestBase {
   @Test
   public void testSalesOrderCount() throws IOException, JSONException {
     generateCollection();
-    DataSet<Vertex> salesQuotations = cases.getVertices()
+    DataSet<EPGMVertex> salesQuotations = cases.getVertices()
       .filter(new ByLabel<>("SalesQuotation"));
-    DataSet<Vertex> salesOrders = cases.getVertices()
+    DataSet<EPGMVertex> salesOrders = cases.getVertices()
       .filter(new ByLabel<>("SalesOrder"));
 
     double actual = 0;
@@ -151,14 +151,14 @@ public class FoodBrokerTest extends GradoopFlinkTestBase {
     for (GraphTransaction graph : result10K) {
       Set<GradoopId> vertexIds = Sets.newHashSetWithExpectedSize(graph.getVertices().size());
 
-      for (Vertex vertex : graph.getVertices()) {
+      for (EPGMVertex vertex : graph.getVertices()) {
         vertexIds.add(vertex.getId());
         assertTrue(vertex.getGraphIds().size() >= 1);
       }
 
       // EDGE CONSISTENCY
 
-      for (Edge edge : graph.getEdges()) {
+      for (EPGMEdge edge : graph.getEdges()) {
         assertTrue("graph does not contain source of " + edge.getLabel(),
           vertexIds.contains(edge.getSourceId()));
 
@@ -178,15 +178,14 @@ public class FoodBrokerTest extends GradoopFlinkTestBase {
     Set<String> foundVertexLabels = Sets.newHashSet();
     Set<String> foundEdgeLabels = Sets.newHashSet();
 
-
     for (int ignored : new int[] {0, 1, 2}) {
       generateCollection();
 
-      for (Vertex vertex : cases.getVertices().collect()) {
+      for (EPGMVertex vertex : cases.getVertices().collect()) {
         foundVertexLabels.add(vertex.getLabel());
       }
 
-      for (Edge edge : cases.getEdges().collect()) {
+      for (EPGMEdge edge : cases.getEdges().collect()) {
         foundEdgeLabels.add(edge.getLabel());
       }
     }
@@ -261,6 +260,4 @@ public class FoodBrokerTest extends GradoopFlinkTestBase {
       cases = foodBroker.execute();
     }
   }
-
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package org.gradoop.flink.datagen.transactions.foodbroker.generators;
 
 import org.apache.flink.api.java.DataSet;
-import org.gradoop.common.model.impl.pojo.Vertex;
+import org.gradoop.common.model.impl.pojo.EPGMVertex;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerBroadcastNames;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerConfig;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerVertexLabels;
@@ -44,7 +44,7 @@ public class EmployeeGenerator
   }
 
   @Override
-  public DataSet<Vertex> generate() {
+  public DataSet<EPGMVertex> generate() {
     List<MasterDataSeed> seeds = getMasterDataSeeds(FoodBrokerVertexLabels.EMPLOYEE_VERTEX_LABEL);
     List<String> cities = foodBrokerConfig
       .getStringValuesFromFile("cities");

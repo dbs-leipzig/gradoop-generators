@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,14 +21,14 @@ import com.google.common.collect.Sets;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
-import org.gradoop.common.model.api.entities.EPGMEdgeFactory;
-import org.gradoop.common.model.api.entities.EPGMGraphHeadFactory;
-import org.gradoop.common.model.api.entities.EPGMVertexFactory;
+import org.gradoop.common.model.api.entities.EdgeFactory;
+import org.gradoop.common.model.api.entities.GraphHeadFactory;
+import org.gradoop.common.model.api.entities.VertexFactory;
 import org.gradoop.common.model.impl.id.GradoopId;
 import org.gradoop.common.model.impl.id.GradoopIdSet;
-import org.gradoop.common.model.impl.pojo.Edge;
-import org.gradoop.common.model.impl.pojo.GraphHead;
-import org.gradoop.common.model.impl.pojo.Vertex;
+import org.gradoop.common.model.impl.pojo.EPGMEdge;
+import org.gradoop.common.model.impl.pojo.EPGMGraphHead;
+import org.gradoop.common.model.impl.pojo.EPGMVertex;
 import org.gradoop.common.model.impl.properties.Properties;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerAcronyms;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerConfigurationKeys;
@@ -41,6 +41,7 @@ import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerVertex
 import org.gradoop.flink.model.impl.layouts.transactional.tuples.GraphTransaction;
 
 import java.math.BigDecimal;
+import java.time.temporal.ChronoField;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
@@ -54,21 +55,21 @@ public class ComplaintHandling extends AbstractProcess
   implements MapFunction<GraphTransaction, GraphTransaction> {
 
   /**
-   * Map wich stores the vertex for each gradoop id.
+   * Map which stores the vertex for each gradoop id.
    */
-  private Map<GradoopId, Vertex> masterDataMap;
+  private Map<GradoopId, EPGMVertex> masterDataMap;
   /**
    * Set containing all sales order lines for one graph transaction.
    */
-  private Set<Edge> salesOrderLines;
+  private Set<EPGMEdge> salesOrderLines;
   /**
    * Set containing all purch order lines for one graph transaction.
    */
-  private Set<Edge> purchOrderLines;
+  private Set<EPGMEdge> purchOrderLines;
   /**
    * The sales order from one graph transaction.
    */
-  private Vertex salesOrder;
+  private EPGMVertex salesOrder;
 
   /**
    * Valued constructor.
@@ -78,8 +79,8 @@ public class ComplaintHandling extends AbstractProcess
    * @param epgmEdgeFactory EPGM edge factory
    * @param config FoodBroker configuration
    */
-  public ComplaintHandling(EPGMGraphHeadFactory<GraphHead> epgmGraphHeadFactory,
-    EPGMVertexFactory<Vertex> epgmVertexFactory, EPGMEdgeFactory<Edge> epgmEdgeFactory,
+  public ComplaintHandling(GraphHeadFactory<EPGMGraphHead> epgmGraphHeadFactory,
+    VertexFactory<EPGMVertex> epgmVertexFactory, EdgeFactory<EPGMEdge> epgmEdgeFactory,
     FoodBrokerConfig config) {
     super(epgmGraphHeadFactory, epgmVertexFactory, epgmEdgeFactory, config);
   }
@@ -100,7 +101,7 @@ public class ComplaintHandling extends AbstractProcess
 
     boolean confirmed = false;
 
-    for (Vertex vertex : graph.getVertices()) {
+    for (EPGMVertex vertex : graph.getVertices()) {
       if (vertex.getLabel().equals(FoodBrokerVertexLabels.SALESORDER_VERTEX_LABEL)) {
         confirmed = true;
         break;
@@ -110,7 +111,7 @@ public class ComplaintHandling extends AbstractProcess
     if (confirmed) {
       edgeMap = createEdgeMap(graph);
       //get needed transactional objects created during brokerage process
-      Set<Vertex> deliveryNotes =
+      Set<EPGMVertex> deliveryNotes =
         getVertexByLabel(graph, FoodBrokerVertexLabels.DELIVERYNOTE_VERTEX_LABEL);
       salesOrderLines = getEdgesByLabel(graph, FoodBrokerEdgeLabels.SALESORDERLINE_EDGE_LABEL);
       purchOrderLines = getEdgesByLabel(graph, FoodBrokerEdgeLabels.PURCHORDERLINE_EDGE_LABEL);
@@ -121,8 +122,8 @@ public class ComplaintHandling extends AbstractProcess
       badQuality(deliveryNotes, graph);
       lateDelivery(deliveryNotes, graph);
       //get all created vertices and edges
-      Set<Vertex> transactionalVertices = getVertices();
-      Set<Edge> transactionalEdges = getEdges();
+      Set<EPGMVertex> transactionalVertices = getVertices();
+      Set<EPGMEdge> transactionalEdges = getEdges();
       //if one or more tickets were created
       if ((transactionalVertices.size() > 0) && (transactionalEdges.size() > 0)) {
         graph.getVertices().addAll(transactionalVertices);
@@ -131,7 +132,7 @@ public class ComplaintHandling extends AbstractProcess
       }
     }
 
-    for (Edge edge : graph.getEdges()) {
+    for (EPGMEdge edge : graph.getEdges()) {
       if (edge.getGraphIds() == null) {
         System.out.println(edge);
       }
@@ -146,13 +147,13 @@ public class ComplaintHandling extends AbstractProcess
    * @param deliveryNotes all deliverynotes from the brokerage process
    * @param graph current case
    */
-  private void badQuality(Set<Vertex> deliveryNotes, GraphTransaction graph) {
+  private void badQuality(Set<EPGMVertex> deliveryNotes, GraphTransaction graph) {
     GradoopId purchOrderId;
     List<Float> influencingMasterQuality;
-    Set<Edge> currentPurchOrderLines;
-    Set<Edge> badSalesOrderLines;
+    Set<EPGMEdge> currentPurchOrderLines;
+    Set<EPGMEdge> badSalesOrderLines;
 
-    for (Vertex deliveryNote : deliveryNotes) {
+    for (EPGMVertex deliveryNote : deliveryNotes) {
       influencingMasterQuality = Lists.newArrayList();
       badSalesOrderLines = Sets.newHashSet();
       //get the corresponding purch order and purch order lines
@@ -160,7 +161,7 @@ public class ComplaintHandling extends AbstractProcess
         getEdgeTargetId(FoodBrokerEdgeLabels.CONTAINS_EDGE_LABEL, deliveryNote.getId());
       currentPurchOrderLines = getPurchOrderLinesByPurchOrder(purchOrderId);
 
-      for (Edge purchOrderLine : currentPurchOrderLines) {
+      for (EPGMEdge purchOrderLine : currentPurchOrderLines) {
         influencingMasterQuality.add(getQuality(productIndex, purchOrderLine.getTargetId()));
       }
       int containedProducts = influencingMasterQuality.size();
@@ -187,13 +188,14 @@ public class ComplaintHandling extends AbstractProcess
           false
         )) {
 
-        for (Edge purchOrderLine : currentPurchOrderLines) {
+        for (EPGMEdge purchOrderLine : currentPurchOrderLines) {
           badSalesOrderLines.add(getCorrespondingSalesOrderLine(purchOrderLine.getId()));
         }
-
-        Vertex ticket = newTicket(
+        //serafin Chrono Field??
+        EPGMVertex ticket = newTicket(
           FoodBrokerPropertyValues.BADQUALITY_TICKET_PROBLEM,
-          deliveryNote.getPropertyValue(FoodBrokerPropertyKeys.DATE_KEY).getLong(), graph);
+          deliveryNote.getPropertyValue(FoodBrokerPropertyKeys.DATE_KEY).getDate().getLong(ChronoField.ERA),
+          graph);
 
         graph.getVertices().add(ticket);
 
@@ -209,14 +211,15 @@ public class ComplaintHandling extends AbstractProcess
    * @param deliveryNotes all deliverynotes from the brokerage process
    * @param graph current case
    */
-  private void lateDelivery(Set<Vertex> deliveryNotes, GraphTransaction graph) {
-    Set<Edge> lateSalesOrderLines = Sets.newHashSet();
+  private void lateDelivery(Set<EPGMVertex> deliveryNotes, GraphTransaction graph) {
+    Set<EPGMEdge> lateSalesOrderLines = Sets.newHashSet();
 
     // Iterate over all delivery notes and take the sales order lines of
     // sales orders, which are late
-    for (Vertex deliveryNote : deliveryNotes) {
-      if (deliveryNote.getPropertyValue(FoodBrokerPropertyKeys.DATE_KEY).getLong() >
-        salesOrder.getPropertyValue(FoodBrokerPropertyKeys.DELIVERYDATE_KEY).getLong()) {
+    //Serafin Chrono.field??
+    for (EPGMVertex deliveryNote : deliveryNotes) {
+      if (deliveryNote.getPropertyValue(FoodBrokerPropertyKeys.DATE_KEY).getDate().getLong(ChronoField.ERA) >
+        salesOrder.getPropertyValue(FoodBrokerPropertyKeys.DELIVERYDATE_KEY).getDate().getLong(ChronoField.ERA)) {
         lateSalesOrderLines.addAll(salesOrderLines);
       }
     }
@@ -224,18 +227,18 @@ public class ComplaintHandling extends AbstractProcess
     // If we have late sales order lines
     if (!lateSalesOrderLines.isEmpty()) {
       // Collect the respective late purch order lines
-      Set<Edge> latePurchOrderLines = Sets.newHashSet();
-      for (Edge salesOrderLine : lateSalesOrderLines) {
+      Set<EPGMEdge> latePurchOrderLines = Sets.newHashSet();
+      for (EPGMEdge salesOrderLine : lateSalesOrderLines) {
         latePurchOrderLines.add(getCorrespondingPurchOrderLine(salesOrderLine.getId()));
       }
       Calendar calendar = Calendar.getInstance();
       calendar.setTimeInMillis(
-        salesOrder.getPropertyValue(FoodBrokerPropertyKeys.DELIVERYDATE_KEY).getLong());
+        salesOrder.getPropertyValue(FoodBrokerPropertyKeys.DELIVERYDATE_KEY).getDate().getLong(ChronoField.ERA));
       calendar.add(Calendar.DATE, 1);
       long createdDate = calendar.getTimeInMillis();
 
       // Create ticket and process refunds
-      Vertex ticket =
+      EPGMVertex ticket =
         newTicket(FoodBrokerPropertyValues.LATEDELIVERY_TICKET_PROBLEM, createdDate, graph);
       grantSalesRefund(lateSalesOrderLines, ticket);
       claimPurchRefund(latePurchOrderLines, ticket);
@@ -250,7 +253,7 @@ public class ComplaintHandling extends AbstractProcess
    * @param graph current case
    * @return the ticket
    */
-  private Vertex newTicket(String problem, long createdAt, GraphTransaction graph) {
+  private EPGMVertex newTicket(String problem, long createdAt, GraphTransaction graph) {
     String label = FoodBrokerVertexLabels.TICKET_VERTEX_LABEL;
     Properties properties = new Properties();
     // properties
@@ -263,22 +266,22 @@ public class ComplaintHandling extends AbstractProcess
     properties.set(FoodBrokerPropertyKeys.ERPSONUM_KEY, salesOrder.getId().toString());
 
     GradoopId employeeId = getRandomEntryFromArray(employeeList);
-    Vertex employee = employeeIndex.get(employeeId);
+    EPGMVertex employee = employeeIndex.get(employeeId);
 
     GradoopId customerId =
       getEdgeTargetId(FoodBrokerEdgeLabels.RECEIVEDFROM_EDGE_LABEL, salesOrder.getId());
 
-    Vertex ticket = newVertex(label, properties);
+    EPGMVertex ticket = newVertex(label, properties);
 
     newEdge(FoodBrokerEdgeLabels.CONCERNS_EDGE_LABEL, ticket.getId(), salesOrder.getId());
     //new master data, user
-    Vertex user = getUserFromEmployee(employee, graph);
+    EPGMVertex user = getUserFromEmployee(employee, graph);
     newEdge(FoodBrokerEdgeLabels.CREATEDBY_EDGE_LABEL, ticket.getId(), user.getId());
     //new master data, user
     user = getUserFromEmployee(employee, graph);
     newEdge(FoodBrokerEdgeLabels.ALLOCATEDTO_EDGE_LABEL, ticket.getId(), user.getId());
     //new master data, client
-    Vertex client = getClientFromCustomerId(customerId, graph);
+    EPGMVertex client = getClientFromCustomerId(customerId, graph);
     newEdge(FoodBrokerEdgeLabels.OPENEDBY_EDGE_LABEL, ticket.getId(), client.getId());
 
     return ticket;
@@ -290,7 +293,7 @@ public class ComplaintHandling extends AbstractProcess
    * @param salesOrderLines sales order lines to calculate refund amount
    * @param ticket the ticket created for the refund
    */
-  private void grantSalesRefund(Set<Edge> salesOrderLines, Vertex ticket) {
+  private void grantSalesRefund(Set<EPGMEdge> salesOrderLines, EPGMVertex ticket) {
     List<Float> influencingMasterQuality = Lists.newArrayList();
     influencingMasterQuality.add(getEdgeTargetQuality(
       FoodBrokerEdgeLabels.ALLOCATEDTO_EDGE_LABEL,
@@ -307,7 +310,7 @@ public class ComplaintHandling extends AbstractProcess
     BigDecimal refundAmount = BigDecimal.ZERO;
     BigDecimal salesAmount;
 
-    for (Edge salesOrderLine : salesOrderLines) {
+    for (EPGMEdge salesOrderLine : salesOrderLines) {
       salesAmount = BigDecimal.valueOf(
         salesOrderLine.getPropertyValue(FoodBrokerPropertyKeys.QUANTITY_KEY).getInt())
         .multiply(
@@ -336,7 +339,7 @@ public class ComplaintHandling extends AbstractProcess
       properties.set(
         FoodBrokerPropertyKeys.TEXT_KEY, FoodBrokerPropertyValues.TEXT_CONTENT + ticket.getId());
 
-      Vertex salesInvoice = newVertex(label, properties);
+      EPGMVertex salesInvoice = newVertex(label, properties);
 
       newEdge(FoodBrokerEdgeLabels.CREATEDFOR_EDGE_LABEL, salesInvoice.getId(), salesOrder.getId());
     }
@@ -348,7 +351,7 @@ public class ComplaintHandling extends AbstractProcess
    * @param purchOrderLines purch order lines to calculate refund amount
    * @param ticket the ticket created for the refund
    */
-  private void claimPurchRefund(Set<Edge> purchOrderLines, Vertex ticket) {
+  private void claimPurchRefund(Set<EPGMEdge> purchOrderLines, EPGMVertex ticket) {
     GradoopId purchOrderId = purchOrderLines.iterator().next().getSourceId();
 
     List<Float> influencingMasterQuality = Lists.newArrayList();
@@ -367,7 +370,7 @@ public class ComplaintHandling extends AbstractProcess
     BigDecimal refundAmount = BigDecimal.ZERO;
     BigDecimal purchAmount;
 
-    for (Edge purchOrderLine : purchOrderLines) {
+    for (EPGMEdge purchOrderLine : purchOrderLines) {
       purchAmount = BigDecimal.valueOf(
         purchOrderLine.getPropertyValue(FoodBrokerPropertyKeys.QUANTITY_KEY).getInt())
         .multiply(purchOrderLine.getPropertyValue(
@@ -396,7 +399,7 @@ public class ComplaintHandling extends AbstractProcess
       properties.set(FoodBrokerPropertyKeys.TEXT_KEY,
         FoodBrokerPropertyValues.TEXT_CONTENT + ticket.getId());
 
-      Vertex purchInvoice = newVertex(label, properties);
+      EPGMVertex purchInvoice = newVertex(label, properties);
 
       newEdge(FoodBrokerEdgeLabels.CREATEDFOR_EDGE_LABEL, purchInvoice.getId(), purchOrderId);
     }
@@ -409,10 +412,10 @@ public class ComplaintHandling extends AbstractProcess
    * @param label the label to be searched on
    * @return set of vertices with the given label
    */
-  private Set<Vertex> getVertexByLabel(GraphTransaction transaction, String label) {
-    Set<Vertex> vertices = Sets.newHashSet();
+  private Set<EPGMVertex> getVertexByLabel(GraphTransaction transaction, String label) {
+    Set<EPGMVertex> vertices = Sets.newHashSet();
 
-    for (Vertex vertex : transaction.getVertices()) {
+    for (EPGMVertex vertex : transaction.getVertices()) {
       if (vertex.getLabel().equals(label)) {
         vertices.add(vertex);
       }
@@ -427,9 +430,9 @@ public class ComplaintHandling extends AbstractProcess
    * @param label the label to be searched on
    * @return set of edges with the given label
    */
-  private Set<Edge> getEdgesByLabel(GraphTransaction transaction, String label) {
-    Set<Edge> edges = Sets.newHashSet();
-    for (Edge edge : transaction.getEdges()) {
+  private Set<EPGMEdge> getEdgesByLabel(GraphTransaction transaction, String label) {
+    Set<EPGMEdge> edges = Sets.newHashSet();
+    for (EPGMEdge edge : transaction.getEdges()) {
       if (edge.getLabel().equals(label)) {
         edges.add(edge);
       }
@@ -443,9 +446,9 @@ public class ComplaintHandling extends AbstractProcess
    * @param purchOrderId gradoop id of the purch order
    * @return set of purch order lines
    */
-  private Set<Edge> getPurchOrderLinesByPurchOrder(GradoopId purchOrderId) {
-    Set<Edge> currentPurchOrderLines = Sets.newHashSet();
-    for (Edge purchOrderLine : purchOrderLines) {
+  private Set<EPGMEdge> getPurchOrderLinesByPurchOrder(GradoopId purchOrderId) {
+    Set<EPGMEdge> currentPurchOrderLines = Sets.newHashSet();
+    for (EPGMEdge purchOrderLine : purchOrderLines) {
       if (purchOrderId.equals(purchOrderLine.getSourceId())) {
         currentPurchOrderLines.add(purchOrderLine);
       }
@@ -459,8 +462,8 @@ public class ComplaintHandling extends AbstractProcess
    * @param salesOrderLineId gradoop id of the sales order line
    * @return set of sales oder lines
    */
-  private Edge getCorrespondingPurchOrderLine(GradoopId salesOrderLineId) {
-    for (Edge purchOrderLine : purchOrderLines) {
+  private EPGMEdge getCorrespondingPurchOrderLine(GradoopId salesOrderLineId) {
+    for (EPGMEdge purchOrderLine : purchOrderLines) {
       if (purchOrderLine.getPropertyValue("salesOrderLine").getString()
         .equals(salesOrderLineId.toString())) {
         return purchOrderLine;
@@ -475,8 +478,8 @@ public class ComplaintHandling extends AbstractProcess
    * @param purchOrderLineId gradoop id of the purch order line
    * @return sales order line
    */
-  private Edge getCorrespondingSalesOrderLine(GradoopId purchOrderLineId) {
-    for (Edge salesOrderLine : salesOrderLines) {
+  private EPGMEdge getCorrespondingSalesOrderLine(GradoopId purchOrderLineId) {
+    for (EPGMEdge salesOrderLine : salesOrderLines) {
       if (salesOrderLine.getPropertyValue("purchOrderLine").getString()
         .equals(purchOrderLineId.toString())) {
         return salesOrderLine;
@@ -493,7 +496,7 @@ public class ComplaintHandling extends AbstractProcess
    * @param graph current case
    * @return the vertex representing an user
    */
-  private Vertex getUserFromEmployee(Vertex employee, GraphTransaction graph) {
+  private EPGMVertex getUserFromEmployee(EPGMVertex employee, GraphTransaction graph) {
     if (masterDataMap.containsKey(employee.getId())) {
       return masterDataMap.get(employee.getId());
     } else {
@@ -512,7 +515,7 @@ public class ComplaintHandling extends AbstractProcess
       email += "@biiig.org";
       properties.set(FoodBrokerPropertyKeys.EMAIL_KEY, email);
       //create the vertex and store it in a map for fast access
-      Vertex user = vertexFactory
+      EPGMVertex user = vertexFactory
         .createVertex(FoodBrokerVertexLabels.USER_VERTEX_LABEL, properties, graphIds);
       masterDataMap.put(employee.getId(), user);
       userMap
@@ -534,15 +537,15 @@ public class ComplaintHandling extends AbstractProcess
    * @param graph current case
    * @return the vertex representing a client
    */
-  private Vertex getClientFromCustomerId(GradoopId customerId, GraphTransaction graph) {
-    Vertex client;
+  private EPGMVertex getClientFromCustomerId(GradoopId customerId, GraphTransaction graph) {
+    EPGMVertex client;
 
     if (masterDataMap.containsKey(customerId)) {
       client = masterDataMap.get(customerId);
     } else {
       //create properties
       Properties properties;
-      Vertex customer = graph.getVertexById(customerId);
+      EPGMVertex customer = graph.getVertexById(customerId);
       properties = customer.getProperties();
       String sourceIdKey = properties.get(FoodBrokerPropertyKeys.SOURCEID_KEY).getString();
       sourceIdKey = sourceIdKey
@@ -571,13 +574,13 @@ public class ComplaintHandling extends AbstractProcess
    * criteria.
    *
    * @param transaction the graph transaction containing all the edges
-   * @return HashMap from (String, GradoopId) -> Set(Edge)
+   * @return HashMap from (String, GradoopId) -> Set(EPGMEdge)
    */
-  private Map<Tuple2<String, GradoopId>, Set<Edge>> createEdgeMap(GraphTransaction transaction) {
-    Map<Tuple2<String, GradoopId>, Set<Edge>> edgeMap = Maps.newHashMap();
-    Set<Edge> edges;
+  private Map<Tuple2<String, GradoopId>, Set<EPGMEdge>> createEdgeMap(GraphTransaction transaction) {
+    Map<Tuple2<String, GradoopId>, Set<EPGMEdge>> edgeMap = Maps.newHashMap();
+    Set<EPGMEdge> edges;
     Tuple2<String, GradoopId> key;
-    for (Edge edge : transaction.getEdges()) {
+    for (EPGMEdge edge : transaction.getEdges()) {
       edges = Sets.newHashSet();
       key = new Tuple2<>(edge.getLabel(), edge.getSourceId());
       if (edgeMap.containsKey(key)) {

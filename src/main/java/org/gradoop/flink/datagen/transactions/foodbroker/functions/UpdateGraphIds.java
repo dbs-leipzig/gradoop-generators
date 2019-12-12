@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,17 +19,17 @@ import org.apache.flink.api.common.functions.JoinFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.gradoop.common.model.impl.id.GradoopId;
 import org.gradoop.common.model.impl.id.GradoopIdSet;
-import org.gradoop.common.model.impl.pojo.Vertex;
+import org.gradoop.common.model.impl.pojo.EPGMVertex;
 
 /**
  * Updates the graph id list of a vertex to the one of the tuple's second element. The first
  * element is the gradoop id of the vertex.
  */
 public class UpdateGraphIds
-  implements JoinFunction<Tuple2<GradoopId, GradoopIdSet>, Vertex, Vertex> {
+  implements JoinFunction<Tuple2<GradoopId, GradoopIdSet>, EPGMVertex, EPGMVertex> {
 
   @Override
-  public Vertex join(Tuple2<GradoopId, GradoopIdSet> pair, Vertex vertex) throws Exception {
+  public EPGMVertex join(Tuple2<GradoopId, GradoopIdSet> pair, EPGMVertex vertex) throws Exception {
     vertex.setGraphIds(pair.f1);
     return vertex;
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package org.gradoop.flink.datagen.transactions.foodbroker;
 
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
-import org.gradoop.common.model.impl.pojo.Vertex;
+import org.gradoop.common.model.impl.pojo.EPGMVertex;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerConfig;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerBroadcastNames;
 import org.gradoop.flink.datagen.transactions.foodbroker.functions.EnsureGraphContainment;
@@ -28,8 +28,8 @@ import org.gradoop.flink.datagen.transactions.foodbroker.generators.EmployeeGene
 import org.gradoop.flink.datagen.transactions.foodbroker.generators.LogisticsGenerator;
 import org.gradoop.flink.datagen.transactions.foodbroker.generators.ProductGenerator;
 import org.gradoop.flink.datagen.transactions.foodbroker.generators.VendorGenerator;
-import org.gradoop.flink.model.api.epgm.GraphCollection;
-import org.gradoop.flink.model.api.epgm.GraphCollectionFactory;
+import org.gradoop.flink.model.impl.epgm.GraphCollection;
+import org.gradoop.flink.model.impl.epgm.GraphCollectionFactory;
 import org.gradoop.flink.model.api.operators.GraphCollectionGenerator;
 import org.gradoop.flink.model.impl.layouts.transactional.TxCollectionLayoutFactory;
 import org.gradoop.flink.model.impl.layouts.transactional.tuples.GraphTransaction;
@@ -55,23 +55,23 @@ public class FoodBroker implements GraphCollectionGenerator {
   /**
    * Set which contains all customer vertices.
    */
-  private DataSet<Vertex> customers;
+  private DataSet<EPGMVertex> customers;
   /**
    * Set which contains all vendor vertices.
    */
-  private DataSet<Vertex> vendors;
+  private DataSet<EPGMVertex> vendors;
   /**
    * Set which contains all logistic vertices.
    */
-  private DataSet<Vertex> logistics;
+  private DataSet<EPGMVertex> logistics;
   /**
    * Set which contains all employee vertices.
    */
-  private DataSet<Vertex> employees;
+  private DataSet<EPGMVertex> employees;
   /**
    * Set which contains all product vertices.
    */
-  private DataSet<Vertex> products;
+  private DataSet<EPGMVertex> products;
 
   /**
    * Valued constructor.
@@ -101,8 +101,9 @@ public class FoodBroker implements GraphCollectionGenerator {
       .getCaseCount());
 
     DataSet<GraphTransaction> cases = caseSeeds
-      .map(new Brokerage(gradoopFlinkConfig.getGraphHeadFactory(), gradoopFlinkConfig
-        .getVertexFactory(), gradoopFlinkConfig.getEdgeFactory(), foodBrokerConfig))
+      .map(new Brokerage(gradoopFlinkConfig.getGraphCollectionFactory().getGraphHeadFactory(),
+        gradoopFlinkConfig.getGraphCollectionFactory().getVertexFactory(),
+        gradoopFlinkConfig.getGraphCollectionFactory().getEdgeFactory(), foodBrokerConfig))
       .withBroadcastSet(customers, FoodBrokerBroadcastNames.BC_CUSTOMERS)
       .withBroadcastSet(vendors, FoodBrokerBroadcastNames.BC_VENDORS)
       .withBroadcastSet(logistics, FoodBrokerBroadcastNames.BC_LOGISTICS)
@@ -113,9 +114,9 @@ public class FoodBroker implements GraphCollectionGenerator {
     // Phase 2.2: Run Complaint Handling
     cases = cases
       .map(new ComplaintHandling(
-        gradoopFlinkConfig.getGraphHeadFactory(),
-        gradoopFlinkConfig.getVertexFactory(),
-        gradoopFlinkConfig.getEdgeFactory(), foodBrokerConfig))
+        gradoopFlinkConfig.getGraphCollectionFactory().getGraphHeadFactory(),
+        gradoopFlinkConfig.getGraphCollectionFactory().getVertexFactory(),
+        gradoopFlinkConfig.getGraphCollectionFactory().getEdgeFactory(), foodBrokerConfig))
       .withBroadcastSet(customers, FoodBrokerBroadcastNames.BC_CUSTOMERS)
       .withBroadcastSet(vendors, FoodBrokerBroadcastNames.BC_VENDORS)
       .withBroadcastSet(logistics, FoodBrokerBroadcastNames.BC_LOGISTICS)
@@ -144,5 +145,4 @@ public class FoodBroker implements GraphCollectionGenerator {
     employees = new EmployeeGenerator(gradoopFlinkConfig, foodBrokerConfig).generate();
     products = new ProductGenerator(gradoopFlinkConfig, foodBrokerConfig).generate();
   }
-
 }

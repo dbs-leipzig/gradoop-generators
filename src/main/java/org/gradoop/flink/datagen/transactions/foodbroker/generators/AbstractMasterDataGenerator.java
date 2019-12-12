@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,9 @@
 package org.gradoop.flink.datagen.transactions.foodbroker.generators;
 
 import org.apache.flink.api.java.ExecutionEnvironment;
-import org.gradoop.common.model.impl.pojo.VertexFactory;
+
+import org.gradoop.common.model.api.entities.VertexFactory;
+import org.gradoop.common.model.impl.pojo.EPGMVertex;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerConfig;
 import org.gradoop.flink.datagen.transactions.foodbroker.tuples.MasterDataSeed;
 import org.gradoop.flink.util.GradoopFlinkConfig;
@@ -42,7 +44,7 @@ public abstract class AbstractMasterDataGenerator
   /**
    * EPGM vertex factory.
    */
-  protected final VertexFactory vertexFactory;
+  protected final VertexFactory<EPGMVertex> vertexFactory;
 
   /**
    * Valued constructor.
@@ -54,7 +56,7 @@ public abstract class AbstractMasterDataGenerator
     GradoopFlinkConfig gradoopFlinkConfig, FoodBrokerConfig foodBrokerConfig) {
     this.foodBrokerConfig = foodBrokerConfig;
     this.env = gradoopFlinkConfig.getExecutionEnvironment();
-    this.vertexFactory = gradoopFlinkConfig.getVertexFactory();
+    this.vertexFactory = gradoopFlinkConfig.getLogicalGraphFactory().getVertexFactory();
   }
 
   /**

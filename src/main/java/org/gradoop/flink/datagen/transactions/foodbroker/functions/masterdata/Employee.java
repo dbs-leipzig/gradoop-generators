@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 package org.gradoop.flink.datagen.transactions.foodbroker.functions.masterdata;
 
 import org.apache.flink.configuration.Configuration;
-import org.gradoop.common.model.impl.pojo.Vertex;
-import org.gradoop.common.model.impl.pojo.VertexFactory;
+import org.gradoop.common.model.api.entities.VertexFactory;
+import org.gradoop.common.model.impl.pojo.EPGMVertex;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerAcronyms;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerBroadcastNames;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerConfig;
@@ -60,11 +60,10 @@ public class Employee extends Person {
 
   /**
    * Valued constructor.
-   *
-   * @param vertexFactory EPGM vertex factory.
+   *  @param vertexFactory EPGM vertex factory.
    * @param foodBrokerConfig FoodBroker configuration.
    */
-  public Employee(VertexFactory vertexFactory, FoodBrokerConfig foodBrokerConfig) {
+  public Employee(VertexFactory<EPGMVertex> vertexFactory, FoodBrokerConfig foodBrokerConfig) {
     super(vertexFactory, foodBrokerConfig);
   }
 
@@ -85,8 +84,8 @@ public class Employee extends Person {
   }
 
   @Override
-  public Vertex map(MasterDataSeed seed) throws  Exception {
-    Vertex vertex = super.map(seed);
+  public EPGMVertex map(MasterDataSeed seed) throws  Exception {
+    EPGMVertex vertex = super.map(seed);
     Random random = new Random();
     //set rnd name and gender
     String gender;
