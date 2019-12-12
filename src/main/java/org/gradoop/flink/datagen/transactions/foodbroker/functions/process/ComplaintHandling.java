@@ -191,7 +191,6 @@ public class ComplaintHandling extends AbstractProcess
         for (EPGMEdge purchOrderLine : currentPurchOrderLines) {
           badSalesOrderLines.add(getCorrespondingSalesOrderLine(purchOrderLine.getId()));
         }
-        //serafin Chrono Field??
         EPGMVertex ticket = newTicket(
           FoodBrokerPropertyValues.BADQUALITY_TICKET_PROBLEM,
           deliveryNote.getPropertyValue(FoodBrokerPropertyKeys.DATE_KEY).getDate().getLong(ChronoField.ERA),
@@ -216,7 +215,6 @@ public class ComplaintHandling extends AbstractProcess
 
     // Iterate over all delivery notes and take the sales order lines of
     // sales orders, which are late
-    //Serafin Chrono.field??
     for (EPGMVertex deliveryNote : deliveryNotes) {
       if (deliveryNote.getPropertyValue(FoodBrokerPropertyKeys.DATE_KEY).getDate().getLong(ChronoField.ERA) >
         salesOrder.getPropertyValue(FoodBrokerPropertyKeys.DELIVERYDATE_KEY).getDate().getLong(ChronoField.ERA)) {
