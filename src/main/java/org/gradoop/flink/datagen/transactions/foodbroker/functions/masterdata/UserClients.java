@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,19 @@ package org.gradoop.flink.datagen.transactions.foodbroker.functions.masterdata;
 
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.util.Collector;
-import org.gradoop.common.model.impl.pojo.Vertex;
+import org.gradoop.common.model.impl.pojo.EPGMVertex;
 
 import java.util.Set;
 
 /**
  * Collects all users and clients given by sets into one dataset.
  */
-public class UserClients implements FlatMapFunction<Set<Vertex>, Vertex> {
+public class UserClients implements FlatMapFunction<Set<EPGMVertex>, EPGMVertex> {
 
   @Override
-  public void flatMap(Set<Vertex> vertices,
-    Collector<Vertex> collector) throws Exception {
-    for (Vertex vertex : vertices) {
+  public void flatMap(Set<EPGMVertex> vertices,
+    Collector<EPGMVertex> collector) throws Exception {
+    for (EPGMVertex vertex : vertices) {
       collector.collect(vertex);
     }
   }

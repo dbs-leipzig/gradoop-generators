@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@ package org.gradoop.flink.datagen.transactions.foodbroker.functions.masterdata;
 
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
-import org.gradoop.common.model.impl.pojo.Vertex;
-import org.gradoop.common.model.impl.pojo.VertexFactory;
+import org.gradoop.common.model.api.entities.VertexFactory;
+import org.gradoop.common.model.impl.pojo.EPGMVertex;
 import org.gradoop.common.model.impl.properties.Properties;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerAcronyms;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerConfig;
@@ -109,13 +109,13 @@ public class Product extends MasterData {
    */
   private Integer nameGroupPairCount;
   /**
-   * Amount odf possible adjectives.
+   * Amount of possible adjectives.
    */
   private Integer adjectiveCount;
   /**
-   * EPGM vertex facoty.
+   * EPGM vertex factory.
    */
-  private final VertexFactory vertexFactory;
+  private final VertexFactory<EPGMVertex> vertexFactory;
   /**
    * FoodBroker configuration.
    */
@@ -123,11 +123,10 @@ public class Product extends MasterData {
 
   /**
    * Valued constructor.
-   *
-   * @param vertexFactory EPGM vertex factory
+   *  @param vertexFactory EPGM vertex factory
    * @param config FoodBroker configuration
    */
-  public Product(VertexFactory vertexFactory, FoodBrokerConfig config) {
+  public Product(VertexFactory<EPGMVertex> vertexFactory, FoodBrokerConfig config) {
     this.vertexFactory = vertexFactory;
     this.config = config;
   }
@@ -146,7 +145,7 @@ public class Product extends MasterData {
   }
 
   @Override
-  public Vertex map(MasterDataSeed seed) throws  Exception {
+  public EPGMVertex map(MasterDataSeed seed) throws  Exception {
     //create standard properties from acronym and seed
     Properties properties = createDefaultProperties(seed, FoodBrokerAcronyms.PRODUCT_ACRONYM);
     Random random = new Random();

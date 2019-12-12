@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package org.gradoop.flink.datagen.transactions.foodbroker.functions.masterdata;
 
 import org.apache.flink.api.common.functions.RichMapFunction;
-import org.gradoop.common.model.impl.pojo.Vertex;
+import org.gradoop.common.model.impl.pojo.EPGMVertex;
 import org.gradoop.common.model.impl.properties.Properties;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerAcronyms;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerPropertyKeys;
@@ -26,7 +26,7 @@ import org.gradoop.flink.datagen.transactions.foodbroker.tuples.MasterDataSeed;
 /**
  * Provides default properties and a business identifier for master data objects.
  */
-public abstract class MasterData extends RichMapFunction<MasterDataSeed, Vertex> {
+public abstract class MasterData extends RichMapFunction<MasterDataSeed, EPGMVertex> {
   /**
    * Creates a business identifier.
    *

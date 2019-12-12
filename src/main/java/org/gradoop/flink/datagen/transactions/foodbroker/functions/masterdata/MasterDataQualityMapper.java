@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,17 +18,17 @@ package org.gradoop.flink.datagen.transactions.foodbroker.functions.masterdata;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.gradoop.common.model.impl.id.GradoopId;
-import org.gradoop.common.model.impl.pojo.Vertex;
+import org.gradoop.common.model.impl.pojo.EPGMVertex;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerPropertyKeys;
 
 /**
  * Creates a master data tuple from the given vertex. The tuple consists of the gradoop id and
  * the quality.
  */
-public class MasterDataQualityMapper implements MapFunction<Vertex, Tuple2<GradoopId, Float>> {
+public class MasterDataQualityMapper implements MapFunction<EPGMVertex, Tuple2<GradoopId, Float>> {
 
   @Override
-  public Tuple2<GradoopId, Float> map(Vertex v) throws Exception {
+  public Tuple2<GradoopId, Float> map(EPGMVertex v) throws Exception {
     return new Tuple2<>(v.getId(), v.getPropertyValue(
       FoodBrokerPropertyKeys.QUALITY_KEY).getFloat());
   }

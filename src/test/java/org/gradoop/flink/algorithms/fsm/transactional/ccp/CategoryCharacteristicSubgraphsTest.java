@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,20 +19,23 @@ import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
-import org.gradoop.common.model.impl.pojo.Element;
+import org.gradoop.common.model.api.entities.Element;
+import org.gradoop.common.model.impl.pojo.EPGMGraphHead;
 import org.gradoop.flink.algorithms.fsm.transactional.CategoryCharacteristicSubgraphs;
 import org.gradoop.flink.algorithms.fsm.transactional.common.FSMConfig;
 import org.gradoop.flink.datagen.transactions.predictable.PredictableTransactionsGenerator;
 import org.gradoop.flink.model.GradoopFlinkTestBase;
-import org.gradoop.flink.model.api.epgm.GraphCollection;
+import org.gradoop.flink.model.impl.epgm.GraphCollection;
 import org.gradoop.flink.model.api.functions.TransformationFunction;
+import org.gradoop.flink.model.impl.functions.epgm.ByLabel;
 import org.gradoop.flink.model.impl.functions.utils.AddCount;
 import org.gradoop.flink.model.impl.layouts.transactional.tuples.GraphTransaction;
 import org.gradoop.flink.model.impl.operators.aggregation.ApplyAggregation;
 import org.gradoop.flink.model.impl.operators.aggregation.functions.containment.HasLabel;
 import org.gradoop.flink.model.impl.operators.aggregation.functions.containment.HasVertexLabel;
 import org.gradoop.flink.model.impl.operators.subgraph.ApplySubgraph;
-import org.gradoop.flink.model.impl.operators.subgraph.functions.LabelIsIn;
+import org.gradoop.flink.model.impl.functions.epgm.LabelIsIn;
+import org.gradoop.flink.model.impl.operators.subgraph.Subgraph;
 import org.gradoop.flink.model.impl.operators.transformation.ApplyTransformation;
 import org.gradoop.flink.model.impl.tuples.WithCount;
 import org.junit.Ignore;
@@ -54,26 +57,34 @@ public class CategoryCharacteristicSubgraphsTest extends GradoopFlinkTestBase {
       .fromTransactions(transactions);
     // TODO: Write this collection and remove the generator.
 
+
     HasLabel hasVertexLabelB = new HasVertexLabel("B");
     HasLabel hasVertexLabelC = new HasVertexLabel("C");
     HasLabel hasVertexLabelD = new HasVertexLabel("D");
 
-    collection = collection.apply(new ApplyAggregation(hasVertexLabelB, hasVertexLabelC,
-      hasVertexLabelD));
+    // TODO: Test the following code
+    ByLabel<EPGMGraphHead> byLabelB =  new ByLabel<>("B");
+    ByLabel<EPGMGraphHead> byLabelC =  new ByLabel<>("C");
+    ByLabel<EPGMGraphHead> byLabelD =  new ByLabel<>("D");
+
+    collection =
+      collection.apply(new ApplyAggregation<>(hasVertexLabelB,
+      hasVertexLabelC, hasVertexLabelD));
+
 
     GraphCollection bGraphs = collection
-      .select(hasVertexLabelB)
+      .select(byLabelB)
       .difference(collection
-        .select(hasVertexLabelD)
+        .select(byLabelD)
       );
 
-    GraphCollection cGraphs = bGraphs.select(hasVertexLabelC);
+    GraphCollection cGraphs = bGraphs.select(byLabelC);
 
     bGraphs = bGraphs.difference(cGraphs);
 
     bGraphs = bGraphs
-      .apply(new ApplySubgraph(new LabelIsIn<>("A", "B"), null))
-      .apply(new ApplyTransformation(
+      .apply(new ApplySubgraph<>(new LabelIsIn<>("A", "B"), null, Subgraph.Strategy.BOTH))
+      .apply(new ApplyTransformation<>(
         (current, transformed) -> {
           current.setProperty(CategoryCharacteristicSubgraphs.CATEGORY_KEY, "B");
           return current;
@@ -83,8 +94,8 @@ public class CategoryCharacteristicSubgraphsTest extends GradoopFlinkTestBase {
       ));
 
     cGraphs = cGraphs
-      .apply(new ApplySubgraph(new LabelIsIn<>("A", "C"), null))
-      .apply(new ApplyTransformation(
+      .apply(new ApplySubgraph<>(new LabelIsIn<>("A", "C"), null, Subgraph.Strategy.BOTH)) //???
+      .apply(new ApplyTransformation<>(
         (current, transformed) -> {
           current.setProperty(CategoryCharacteristicSubgraphs.CATEGORY_KEY, "C");
           return current;

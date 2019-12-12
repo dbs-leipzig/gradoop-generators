@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 package org.gradoop.flink.datagen.transactions.foodbroker.functions.masterdata;
 
 import org.apache.flink.configuration.Configuration;
-import org.gradoop.common.model.impl.pojo.Vertex;
-import org.gradoop.common.model.impl.pojo.VertexFactory;
+import org.gradoop.common.model.api.entities.VertexFactory;
+import org.gradoop.common.model.impl.pojo.EPGMVertex;
 import org.gradoop.common.model.impl.properties.Properties;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerAcronyms;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerBroadcastNames;
@@ -59,14 +59,14 @@ public class Logistics extends MasterData {
   /**
    * EPGM vertex factory.
    */
-  private final VertexFactory vertexFactory;
+  private final VertexFactory<EPGMVertex> vertexFactory;
 
   /**
    * Valued constructor.
    *
    * @param vertexFactory EPGM vertex factory
    */
-  public Logistics(VertexFactory vertexFactory) {
+  public Logistics(VertexFactory<EPGMVertex> vertexFactory) {
     this.vertexFactory = vertexFactory;
   }
 
@@ -85,7 +85,7 @@ public class Logistics extends MasterData {
   }
 
   @Override
-  public Vertex map(MasterDataSeed seed) throws  Exception {
+  public EPGMVertex map(MasterDataSeed seed) throws  Exception {
     //create standard properties from acronym and seed
     Properties properties = createDefaultProperties(seed, getAcronym());
     Random random = new Random();

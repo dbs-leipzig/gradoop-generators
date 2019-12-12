@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ public class FoodBrokerConfig implements Serializable {
    * Valued constructor.
    *
    * @param configString string representing a json object
+   * @throws JSONException on failure
    */
   public FoodBrokerConfig(String configString) throws JSONException {
     root = new JSONObject(configString);
@@ -59,8 +60,8 @@ public class FoodBrokerConfig implements Serializable {
    *
    * @param configPath path to the config file
    * @return new FoodBrokerConfig
-   * @throws IOException
-   * @throws JSONException
+   * @throws IOException on failure
+   * @throws JSONException on failure
    */
   public static FoodBrokerConfig fromFile(String configPath)
     throws IOException, JSONException {
@@ -73,7 +74,7 @@ public class FoodBrokerConfig implements Serializable {
    *
    * @param configString string representing a json object
    * @return new FoodBrokerConfig
-   * @throws JSONException
+   * @throws JSONException on failure
    */
   public static FoodBrokerConfig fromJSONString(String configString)
     throws JSONException {
@@ -102,7 +103,7 @@ public class FoodBrokerConfig implements Serializable {
    *
    * @param className class name of the master data
    * @return json object of the searched master data
-   * @throws JSONException
+   * @throws JSONException on failure
    */
   private JSONObject getMasterDataConfigNode(String className) throws JSONException {
     return root.getJSONObject("MasterData").getJSONObject(className);
@@ -112,7 +113,7 @@ public class FoodBrokerConfig implements Serializable {
    * Loads the number of companies to use.
    *
    * @return number of companies to use
-   * @throws JSONException
+   * @throws JSONException on failure
    */
   public int getCompanyCount() throws JSONException {
     return getMasterDataConfigNode("Company").getInt("companyCount");
@@ -122,7 +123,7 @@ public class FoodBrokerConfig implements Serializable {
    * Loads the number of holdings to use.
    *
    * @return number of holdings to use
-   * @throws JSONException
+   * @throws JSONException on failure
    */
   public int getHoldingCount() throws JSONException {
     return getMasterDataConfigNode("Company").getInt("holdingCount");
@@ -132,7 +133,7 @@ public class FoodBrokerConfig implements Serializable {
    * Loads the min number of branches for a company.
    *
    * @return min number of branches for a company
-   * @throws JSONException
+   * @throws JSONException on failure
    */
   public int getBranchMinAmount() throws JSONException {
     return getMasterDataConfigNode("Company").getInt("branchesMin");
@@ -142,7 +143,7 @@ public class FoodBrokerConfig implements Serializable {
    * Loads the max number of branches for a company.
    *
    * @return max number of branches for a company
-   * @throws JSONException
+   * @throws JSONException on failure
    */
   public int getBranchMaxAmount() throws JSONException {
     return getMasterDataConfigNode("Company").getInt("branchesMax");
@@ -436,7 +437,7 @@ public class FoodBrokerConfig implements Serializable {
    * Loads the "TransactionalData" object.
    *
    * @return json object of the transactional data nodes
-   * @throws JSONException
+   * @throws JSONException on failure
    */
   private JSONObject getTransactionalNodes() throws JSONException {
     return root.getJSONObject("TransactionalData");
@@ -446,7 +447,7 @@ public class FoodBrokerConfig implements Serializable {
    * Loads the "Quality" object.
    *
    * @return json object containing the quality settings
-   * @throws JSONException
+   * @throws JSONException on failure
    */
   private JSONObject getQualityNode() throws JSONException {
     return root.getJSONObject("Quality");

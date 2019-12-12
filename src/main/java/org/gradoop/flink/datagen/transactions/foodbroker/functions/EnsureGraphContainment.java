@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package org.gradoop.flink.datagen.transactions.foodbroker.functions;
 
 import org.apache.flink.api.common.functions.MapFunction;
 import org.gradoop.common.model.impl.id.GradoopIdSet;
-import org.gradoop.common.model.impl.pojo.Vertex;
+import org.gradoop.common.model.impl.pojo.EPGMVertex;
 import org.gradoop.flink.model.impl.layouts.transactional.tuples.GraphTransaction;
 
 /**
@@ -29,7 +29,7 @@ public class EnsureGraphContainment implements MapFunction<GraphTransaction, Gra
   public GraphTransaction map(GraphTransaction graph) throws Exception {
     GradoopIdSet graphIds = GradoopIdSet.fromExisting(graph.getGraphHead().getId());
 
-    for (Vertex vertex : graph.getVertices()) {
+    for (EPGMVertex vertex : graph.getVertices()) {
       vertex.setGraphIds(graphIds);
     }
     return graph;

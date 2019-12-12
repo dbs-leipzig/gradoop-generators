@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,15 @@ package org.gradoop.flink.datagen.transactions.foodbroker.functions;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.gradoop.common.model.impl.id.GradoopId;
-import org.gradoop.common.model.impl.pojo.Edge;
+import org.gradoop.common.model.impl.pojo.EPGMEdge;
 
 /**
  * Creates tuples containing the target id of an edge together with the edges graph id.
  */
-public class TargetGraphIdPair implements MapFunction<Edge, Tuple2<GradoopId, GradoopId>> {
+public class TargetGraphIdPair implements MapFunction<EPGMEdge, Tuple2<GradoopId, GradoopId>> {
 
   @Override
-  public Tuple2<GradoopId, GradoopId> map(Edge edge) throws Exception {
+  public Tuple2<GradoopId, GradoopId> map(EPGMEdge edge) throws Exception {
     return new Tuple2<>(edge.getTargetId(), edge.getGraphIds().iterator().next());
   }
 }

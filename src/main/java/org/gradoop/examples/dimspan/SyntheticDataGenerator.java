@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ public class SyntheticDataGenerator
    * Main program to run the example. Arguments are the available options.
    *
    * @param args program arguments
-   * @throws Exception
+   * @throws Exception on failure
    */
   @SuppressWarnings("unchecked")
   public static void main(String[] args) throws Exception {

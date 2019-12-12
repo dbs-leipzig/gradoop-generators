@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 package org.gradoop.flink.datagen.transactions.foodbroker.functions.masterdata;
 
 import org.apache.flink.configuration.Configuration;
-import org.gradoop.common.model.impl.pojo.Vertex;
-import org.gradoop.common.model.impl.pojo.VertexFactory;
+import org.gradoop.common.model.api.entities.VertexFactory;
+import org.gradoop.common.model.impl.pojo.EPGMVertex;
 import org.gradoop.common.model.impl.properties.Properties;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerBroadcastNames;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerConfig;
@@ -36,13 +36,13 @@ public abstract class Person extends MasterData {
    */
   private List<String> cities;
   /**
-   * Amount of pissible cities.
+   * Amount of possible cities.
    */
   private Integer cityCount;
   /**
    * EPGM vertex factory.
    */
-  private final VertexFactory vertexFactory;
+  private final VertexFactory<EPGMVertex> vertexFactory;
   /**
    * FoodBroker configuration.
    */
@@ -50,11 +50,10 @@ public abstract class Person extends MasterData {
 
   /**
    * Valued constructor.
-   *
-   * @param vertexFactory EPGM vertex factory
+   *  @param vertexFactory EPGM vertex factory
    * @param foodBrokerConfig FoodBroker configuration
    */
-  public Person(VertexFactory vertexFactory, FoodBrokerConfig foodBrokerConfig) {
+  public Person(VertexFactory<EPGMVertex> vertexFactory, FoodBrokerConfig foodBrokerConfig) {
     this.vertexFactory = vertexFactory;
     this.foodBrokerConfig = foodBrokerConfig;
   }
@@ -69,7 +68,7 @@ public abstract class Person extends MasterData {
   }
 
   @Override
-  public Vertex map(MasterDataSeed seed) throws  Exception {
+  public EPGMVertex map(MasterDataSeed seed) throws  Exception {
     //create standard properties from acronym and seed
     Properties properties = createDefaultProperties(seed, getAcronym());
     Random random = new Random();

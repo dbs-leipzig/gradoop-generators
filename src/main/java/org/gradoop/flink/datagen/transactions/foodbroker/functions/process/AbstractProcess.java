@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,14 +20,14 @@ import com.google.common.collect.Sets;
 import org.apache.flink.api.common.functions.AbstractRichFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
-import org.gradoop.common.model.api.entities.EPGMEdgeFactory;
-import org.gradoop.common.model.api.entities.EPGMGraphHeadFactory;
-import org.gradoop.common.model.api.entities.EPGMVertexFactory;
+import org.gradoop.common.model.api.entities.EdgeFactory;
+import org.gradoop.common.model.api.entities.GraphHeadFactory;
+import org.gradoop.common.model.api.entities.VertexFactory;
 import org.gradoop.common.model.impl.id.GradoopId;
 import org.gradoop.common.model.impl.id.GradoopIdSet;
-import org.gradoop.common.model.impl.pojo.Edge;
-import org.gradoop.common.model.impl.pojo.GraphHead;
-import org.gradoop.common.model.impl.pojo.Vertex;
+import org.gradoop.common.model.impl.pojo.EPGMEdge;
+import org.gradoop.common.model.impl.pojo.EPGMGraphHead;
+import org.gradoop.common.model.impl.pojo.EPGMVertex;
 import org.gradoop.common.model.impl.properties.Properties;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerConfig;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerBroadcastNames;
@@ -46,15 +46,15 @@ public abstract class AbstractProcess extends AbstractRichFunction {
   /**
    * EPGM graph head factory.
    */
-  protected EPGMGraphHeadFactory<GraphHead> graphHeadFactory;
+  protected GraphHeadFactory<EPGMGraphHead> graphHeadFactory;
   /**
    * EPGM vertex factory.
    */
-  protected EPGMVertexFactory<Vertex> vertexFactory;
+  protected VertexFactory<EPGMVertex> vertexFactory;
   /**
    * EPGM edge factory.
    */
-  protected EPGMEdgeFactory<Edge> edgeFactory;
+  protected EdgeFactory<EPGMEdge> edgeFactory;
   /**
    * Foodbroker configuration.
    */
@@ -62,29 +62,28 @@ public abstract class AbstractProcess extends AbstractRichFunction {
   /**
    * Map to get the logistic quality of a given gradoop id.
    */
-  protected Map<GradoopId, Vertex> logisticIndex;
+  protected Map<GradoopId, EPGMVertex> logisticIndex;
   /**
    * Map to get the employee quality of a given gradoop id.
    */
-  protected Map<GradoopId, Vertex> employeeIndex;
+  protected Map<GradoopId, EPGMVertex> employeeIndex;
   /**
    * Map to get the product quality of a given gradoop id.
    */
-  protected Map<GradoopId, Vertex> productIndex;
-
+  protected Map<GradoopId, EPGMVertex> productIndex;
   /**
-   * Graph ids, one seperate id for each case.
+   * Graph ids, one separate id for each case.
    */
   protected GradoopIdSet graphIds;
   /**
    * Map to quickly receive the target id of an edge.
    * Note that a object may have multiple outgoing edges with the same label.
    */
-  protected Map<Tuple2<String, GradoopId>, Set<Edge>> edgeMap;
+  protected Map<Tuple2<String, GradoopId>, Set<EPGMEdge>> edgeMap;
   /**
    * Map to get the vertex object of a given gradoop id.
    */
-  protected Map<GradoopId, Vertex> vertexMap;
+  protected Map<GradoopId, EPGMVertex> vertexMap;
   /**
    * Map to get the user of a given gradoop id.
    */
@@ -100,7 +99,7 @@ public abstract class AbstractProcess extends AbstractRichFunction {
   /**
    * Map to get the customer quality of a given gradoop id.
    */
-  protected Map<GradoopId, Vertex> customerIndex;
+  protected Map<GradoopId, EPGMVertex> customerIndex;
   /**
    * List of all employees.
    */
@@ -108,7 +107,7 @@ public abstract class AbstractProcess extends AbstractRichFunction {
   /**
    * Map to get the vendor quality of a given gradoop id.
    */
-  private Map<GradoopId, Vertex> vendorIndex;
+  private Map<GradoopId, EPGMVertex> vendorIndex;
   /**
    * List of all customers.
    */
@@ -134,9 +133,9 @@ public abstract class AbstractProcess extends AbstractRichFunction {
    * @param edgeFactory EPGM edge Factory
    * @param config FoodBroker configuration
    */
-  public AbstractProcess(EPGMGraphHeadFactory<GraphHead> graphHeadFactory,
-    EPGMVertexFactory<Vertex> vertexFactory,
-    EPGMEdgeFactory<Edge> edgeFactory, FoodBrokerConfig config) {
+  public AbstractProcess(GraphHeadFactory<EPGMGraphHead> graphHeadFactory,
+    VertexFactory<EPGMVertex> vertexFactory,
+    EdgeFactory<EPGMEdge> edgeFactory, FoodBrokerConfig config) {
     this.graphHeadFactory = graphHeadFactory;
     this.vertexFactory = vertexFactory;
     this.edgeFactory = edgeFactory;
@@ -173,14 +172,14 @@ public abstract class AbstractProcess extends AbstractRichFunction {
    * @param broadcastVariable broadcast variable
    * @return vertex index
    */
-  private Map<GradoopId, Vertex> createIndexFromBroadcast(String broadcastVariable) {
+  private Map<GradoopId, EPGMVertex> createIndexFromBroadcast(String broadcastVariable) {
 
-    List<Vertex> broadcast =
+    List<EPGMVertex> broadcast =
       getRuntimeContext().getBroadcastVariable(broadcastVariable);
 
-    Map<GradoopId, Vertex> map = Maps.newHashMapWithExpectedSize(broadcast.size());
+    Map<GradoopId, EPGMVertex> map = Maps.newHashMapWithExpectedSize(broadcast.size());
 
-    for (Vertex vertex : broadcast) {
+    for (EPGMVertex vertex : broadcast) {
       map.put(vertex.getId(), vertex);
     }
 
@@ -192,7 +191,7 @@ public abstract class AbstractProcess extends AbstractRichFunction {
    *
    * @param seed the transactional data seed
    * @param acronym the transactional data acronym
-   * @return a busines identifier
+   * @return a business identifier
    */
   protected String createBusinessIdentifier(long seed, String acronym) {
     String seedString = String.valueOf(seed);
@@ -216,7 +215,7 @@ public abstract class AbstractProcess extends AbstractRichFunction {
    * @param target the target id
    * @return the newly created edge
    */
-  protected Edge newEdge(String label, GradoopId source, GradoopId target) {
+  protected EPGMEdge newEdge(String label, GradoopId source, GradoopId target) {
     return newEdge(label, source, target, null);
   }
 
@@ -229,16 +228,16 @@ public abstract class AbstractProcess extends AbstractRichFunction {
    * @param properties the edge properties
    * @return the newly created edge
    */
-  protected Edge newEdge(String label, GradoopId source, GradoopId target,
+  protected EPGMEdge newEdge(String label, GradoopId source, GradoopId target,
     Properties properties) {
-    Edge edge;
+    EPGMEdge edge;
     if (properties == null) {
       edge = edgeFactory.createEdge(label, source, target, graphIds);
     } else {
       edge = edgeFactory.createEdge(label, source, target, properties, graphIds);
     }
     Tuple2<String, GradoopId> key = new Tuple2<>(label, source);
-    Set<Edge> targets = Sets.newHashSet();
+    Set<EPGMEdge> targets = Sets.newHashSet();
     if (edgeMap.containsKey(key)) {
       targets = edgeMap.get(key);
     }
@@ -254,8 +253,8 @@ public abstract class AbstractProcess extends AbstractRichFunction {
    * @param properties the new vertex properties
    * @return the created vertex.
    */
-  protected Vertex newVertex(String label, Properties properties) {
-    Vertex vertex = vertexFactory.createVertex(label, properties, graphIds);
+  protected EPGMVertex newVertex(String label, Properties properties) {
+    EPGMVertex vertex = vertexFactory.createVertex(label, properties, graphIds);
     vertexMap.put(vertex.getId(), vertex);
     return vertex;
   }
@@ -316,7 +315,7 @@ public abstract class AbstractProcess extends AbstractRichFunction {
    * @param id vertex id
    * @return quality
    */
-  protected float getQuality(Map<GradoopId, Vertex> index, GradoopId id) {
+  protected float getQuality(Map<GradoopId, EPGMVertex> index, GradoopId id) {
     return index.get(id).getPropertyValue(FoodBrokerPropertyKeys.QUALITY_KEY).getFloat();
   }
 
@@ -398,7 +397,7 @@ public abstract class AbstractProcess extends AbstractRichFunction {
    * @param key property key
    * @return string value
    */
-  protected String getStringValue(Map<GradoopId, Vertex> index, GradoopId id, String key) {
+  protected String getStringValue(Map<GradoopId, EPGMVertex> index, GradoopId id, String key) {
     return index.get(id).getPropertyValue(key).getString();
   }
 
@@ -455,7 +454,7 @@ public abstract class AbstractProcess extends AbstractRichFunction {
    * @param index master data index
    * @return master data id
    */
-  private GradoopId getNextMasterData(GradoopId[] list, Map<GradoopId, Vertex> index) {
+  private GradoopId getNextMasterData(GradoopId[] list, Map<GradoopId, EPGMVertex> index) {
     GradoopId id = getRandomEntryFromArray(list);
     vertexMap.put(id, index.get(id));
     return id;
@@ -475,7 +474,7 @@ public abstract class AbstractProcess extends AbstractRichFunction {
    *
    * @return set of vertices
    */
-  protected Set<Vertex> getVertices() {
+  protected Set<EPGMVertex> getVertices() {
     return Sets.newHashSet(vertexMap.values());
   }
 
@@ -484,9 +483,9 @@ public abstract class AbstractProcess extends AbstractRichFunction {
    *
    * @return set of edges
    */
-  protected Set<Edge> getEdges() {
-    Set<Edge> edges = Sets.newHashSet();
-    for (Map.Entry<Tuple2<String, GradoopId>, Set<Edge>> entry : edgeMap.entrySet()) {
+  protected Set<EPGMEdge> getEdges() {
+    Set<EPGMEdge> edges = Sets.newHashSet();
+    for (Map.Entry<Tuple2<String, GradoopId>, Set<EPGMEdge>> entry : edgeMap.entrySet()) {
       edges.addAll(entry.getValue());
     }
     return edges;

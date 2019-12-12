@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,14 @@ package org.gradoop.flink.datagen.transactions.foodbroker.functions.process;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.gradoop.common.model.api.entities.EPGMEdgeFactory;
-import org.gradoop.common.model.api.entities.EPGMGraphHeadFactory;
-import org.gradoop.common.model.api.entities.EPGMVertexFactory;
+import org.gradoop.common.model.api.entities.EdgeFactory;
+import org.gradoop.common.model.api.entities.GraphHeadFactory;
+import org.gradoop.common.model.api.entities.VertexFactory;
 import org.gradoop.common.model.impl.id.GradoopId;
 import org.gradoop.common.model.impl.id.GradoopIdSet;
-import org.gradoop.common.model.impl.pojo.Edge;
-import org.gradoop.common.model.impl.pojo.GraphHead;
-import org.gradoop.common.model.impl.pojo.Vertex;
+import org.gradoop.common.model.impl.pojo.EPGMEdge;
+import org.gradoop.common.model.impl.pojo.EPGMGraphHead;
+import org.gradoop.common.model.impl.pojo.EPGMVertex;
 import org.gradoop.common.model.impl.properties.Properties;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerAcronyms;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerConfig;
@@ -36,7 +36,6 @@ import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerProper
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerPropertyValues;
 import org.gradoop.flink.datagen.transactions.foodbroker.config.FoodBrokerVertexLabels;
 import org.gradoop.flink.model.impl.layouts.transactional.tuples.GraphTransaction;
-
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -59,8 +58,8 @@ public class Brokerage
    * @param edgeFactory EPGM edge factory
    * @param config Foodbroker configuration
    */
-  public Brokerage(EPGMGraphHeadFactory<GraphHead> graphHeadFactory,
-    EPGMVertexFactory<Vertex> vertexFactory, EPGMEdgeFactory<Edge> edgeFactory,
+  public Brokerage(GraphHeadFactory<EPGMGraphHead> graphHeadFactory,
+    VertexFactory<EPGMVertex> vertexFactory, EdgeFactory<EPGMEdge> edgeFactory,
     FoodBrokerConfig config) {
     super(graphHeadFactory, vertexFactory, edgeFactory, config);
   }
@@ -68,7 +67,7 @@ public class Brokerage
   @Override
   public GraphTransaction map(Long seed)
     throws Exception {
-    GraphHead graphHead;
+    EPGMGraphHead graphHead;
     GraphTransaction graphTransaction;
 
     LocalDate startDate = config.getStartDate();
@@ -84,24 +83,24 @@ public class Brokerage
     graphTransaction = new GraphTransaction();
 
     // SalesQuotation
-    Vertex salesQuotation = newSalesQuotation(startDate);
+    EPGMVertex salesQuotation = newSalesQuotation(startDate);
 
     // SalesQuotationLines
-    List<Edge> salesQuotationLines = newSalesQuotationLines(salesQuotation);
+    List<EPGMEdge> salesQuotationLines = newSalesQuotationLines(salesQuotation);
 
     if (confirmed(salesQuotation)) {
       // SalesOrder
-      Vertex salesOrder = newSalesOrder(salesQuotation);
+      EPGMVertex salesOrder = newSalesOrder(salesQuotation);
 
       // SalesOrderLines
-      List<Edge> salesOrderLines = newSalesOrderLines(salesOrder,
+      List<EPGMEdge> salesOrderLines = newSalesOrderLines(salesOrder,
         salesQuotationLines);
 
       // newPurchOrders
-      List<Vertex> purchOrders = newPurchOrders(salesOrder, salesOrderLines);
+      List<EPGMVertex> purchOrders = newPurchOrders(salesOrder, salesOrderLines);
 
       // PurchOrderLines
-      List<Edge> purchOrderLines = newPurchOrderLines(purchOrders, salesOrderLines);
+      List<EPGMEdge> purchOrderLines = newPurchOrderLines(purchOrders, salesOrderLines);
 
       // DeliveryNotes
       newDeliveryNotes(purchOrders);
@@ -125,7 +124,7 @@ public class Brokerage
    * @param salesQuotation the quotation to be checked
    * @return true, if quotation is confirmed
    */
-  private boolean confirmed(Vertex salesQuotation) {
+  private boolean confirmed(EPGMVertex salesQuotation) {
     List<Float> influencingMasterQuality = Lists.newArrayList();
     GradoopId employee =
       getEdgeTargetId(FoodBrokerEdgeLabels.SENTBY_EDGE_LABEL, salesQuotation.getId());
@@ -153,7 +152,7 @@ public class Brokerage
    * @param startDate of the quotation
    * @return vertex representation of a sales quotation
    */
-  private Vertex newSalesQuotation(LocalDate startDate) {
+  private EPGMVertex newSalesQuotation(LocalDate startDate) {
     String label = FoodBrokerVertexLabels.SALESQUOTATION_VERTEX_LABEL;
     Properties properties = new Properties();
 
@@ -167,7 +166,7 @@ public class Brokerage
     properties.set(FoodBrokerPropertyKeys.DATE_KEY, startDate);
     properties.set(FoodBrokerPropertyKeys.SOURCEID_KEY, bid);
 
-    Vertex salesQuotation = newVertex(label, properties);
+    EPGMVertex salesQuotation = newVertex(label, properties);
 
     // select random employee and customer
     GradoopId rndEmployee = getNextEmployee();
@@ -185,9 +184,9 @@ public class Brokerage
    * @param salesQuotation quotation, corresponding to the lines
    * @return list of vertices which represent a sales quotation line
    */
-  private List<Edge> newSalesQuotationLines(Vertex salesQuotation) {
-    List<Edge> salesQuotationLines = Lists.newArrayList();
-    Edge salesQuotationLine;
+  private List<EPGMEdge> newSalesQuotationLines(EPGMVertex salesQuotation) {
+    List<EPGMEdge> salesQuotationLines = Lists.newArrayList();
+    EPGMEdge salesQuotationLine;
     GradoopId product;
 
     List<Float> influencingMasterQuality = Lists.newArrayList();
@@ -226,7 +225,7 @@ public class Brokerage
    * @param product product, corresponding to the line
    * @return vertex representation of a sales quotation line
    */
-  private Edge newSalesQuotationLine(Vertex salesQuotation, GradoopId product) {
+  private EPGMEdge newSalesQuotationLine(EPGMVertex salesQuotation, GradoopId product) {
     String label = FoodBrokerEdgeLabels.SALESQUOTATIONLINE_EDGE_LABEL;
     Properties properties = new Properties();
 
@@ -280,7 +279,7 @@ public class Brokerage
    * @param salesQuotation the confirmed quotation
    * @return vertex representation of a sales order
    */
-  private Vertex newSalesOrder(Vertex salesQuotation) {
+  private EPGMVertex newSalesOrder(EPGMVertex salesQuotation) {
     String label = FoodBrokerVertexLabels.SALESORDER_VERTEX_LABEL;
     Properties properties = new Properties();
 
@@ -333,7 +332,7 @@ public class Brokerage
       date, influencingMasterQuality, FoodBrokerVertexLabels.SALESORDER_VERTEX_LABEL,
       FoodBrokerConfigurationKeys.SO_DELIVERYAGREEMENTDELAY_CONFIG_KEY));
 
-    Vertex salesOrder = newVertex(label, properties);
+    EPGMVertex salesOrder = newVertex(label, properties);
 
     // create all relevant edges
     newEdge(FoodBrokerEdgeLabels.RECEIVEDFROM_EDGE_LABEL, salesOrder.getId(), getEdgeTargetId(
@@ -351,13 +350,13 @@ public class Brokerage
    * @param salesQuotationLines lines, corresponding to the quotation
    * @return list of vertices which represent a sales order line
    */
-  private List<Edge> newSalesOrderLines(Vertex salesOrder,
-    List<Edge> salesQuotationLines) {
-    List<Edge> salesOrderLines = Lists.newArrayList();
-    Edge salesOrderLine;
+  private List<EPGMEdge> newSalesOrderLines(EPGMVertex salesOrder,
+    List<EPGMEdge> salesQuotationLines) {
+    List<EPGMEdge> salesOrderLines = Lists.newArrayList();
+    EPGMEdge salesOrderLine;
 
     // create one sales orde rline for each sales quotation line
-    for (Edge singleSalesQuotationLine : salesQuotationLines) {
+    for (EPGMEdge singleSalesQuotationLine : salesQuotationLines) {
       salesOrderLine = newSalesOrderLine(salesOrder, singleSalesQuotationLine);
       salesOrderLines.add(salesOrderLine);
     }
@@ -372,7 +371,7 @@ public class Brokerage
    * @param salesQuotationLine lines, corresponding to the quotation
    * @return vertex representation of a sales order line
    */
-  private Edge newSalesOrderLine(Vertex salesOrder, Edge salesQuotationLine) {
+  private EPGMEdge newSalesOrderLine(EPGMVertex salesOrder, EPGMEdge salesQuotationLine) {
     String label = FoodBrokerEdgeLabels.SALESORDERLINE_EDGE_LABEL;
     Properties properties = new Properties();
 
@@ -397,9 +396,9 @@ public class Brokerage
    * @param salesOrderLines lines, corresponding to the sales order
    * @return list of vertices which represent a purch order
    */
-  private List<Vertex> newPurchOrders(Vertex salesOrder, List salesOrderLines) {
-    List<Vertex> purchOrders = Lists.newArrayList();
-    Vertex purchOrder;
+  private List<EPGMVertex> newPurchOrders(EPGMVertex salesOrder, List salesOrderLines) {
+    List<EPGMVertex> purchOrders = Lists.newArrayList();
+    EPGMVertex purchOrder;
 
     int numberOfVendors = config.getIntRangeConfigurationValue(
       new ArrayList<>(), FoodBrokerVertexLabels.PURCHORDER_VERTEX_LABEL,
@@ -420,7 +419,7 @@ public class Brokerage
    * @param processedBy employee chosen for this job
    * @return vertex representation of a purch order
    */
-  private Vertex newPurchOrder(Vertex salesOrder, GradoopId processedBy) {
+  private EPGMVertex newPurchOrder(EPGMVertex salesOrder, GradoopId processedBy) {
     String label = FoodBrokerVertexLabels.PURCHORDER_VERTEX_LABEL;
     Properties properties = new Properties();
 
@@ -445,7 +444,7 @@ public class Brokerage
     properties.set(FoodBrokerPropertyKeys.DATE_KEY, date);
     properties.set(FoodBrokerPropertyKeys.SOURCEID_KEY, bid);
 
-    Vertex purchOrder = newVertex(label, properties);
+    EPGMVertex purchOrder = newVertex(label, properties);
 
     // create all relevant edges
     newEdge(FoodBrokerEdgeLabels.SERVES_EDGE_LABEL, purchOrder.getId(), salesOrder.getId());
@@ -462,16 +461,16 @@ public class Brokerage
    * @param salesOrderLines sales order lines, corresponding to the sales order
    * @return list of vertices which represent a purch order line
    */
-  private List<Edge> newPurchOrderLines(List<Vertex> purchOrders,
-    List<Edge> salesOrderLines) {
-    List<Edge> purchOrderLines = Lists.newArrayList();
-    Edge purchOrderLine;
-    Vertex purchOrder;
+  private List<EPGMEdge> newPurchOrderLines(List<EPGMVertex> purchOrders,
+    List<EPGMEdge> salesOrderLines) {
+    List<EPGMEdge> purchOrderLines = Lists.newArrayList();
+    EPGMEdge purchOrderLine;
+    EPGMVertex purchOrder;
 
     int linesPerPurchOrder = salesOrderLines.size() / purchOrders.size();
 
     // create the correct purch order line, depending on the sales order line, for each purch order
-    for (Edge singleSalesOrderLine : salesOrderLines) {
+    for (EPGMEdge singleSalesOrderLine : salesOrderLines) {
       int purchOrderIndex = salesOrderLines.indexOf(singleSalesOrderLine) /
         linesPerPurchOrder;
       if (purchOrderIndex > (purchOrders.size() - 1)) {
@@ -493,9 +492,9 @@ public class Brokerage
    * @param salesOrderLine sales order line, corresponding to the sales order
    * @return vertex representation of a purch order line
    */
-  private Edge newPurchOrderLine(Vertex purchOrder, Edge salesOrderLine) {
+  private EPGMEdge newPurchOrderLine(EPGMVertex purchOrder, EPGMEdge salesOrderLine) {
     String label = FoodBrokerEdgeLabels.PURCHORDERLINE_EDGE_LABEL;
-    Edge purchOrderLine;
+    EPGMEdge purchOrderLine;
     Properties properties = new Properties();
 
     // calculate and set the properties
@@ -550,11 +549,11 @@ public class Brokerage
    * @param purchOrders purch orders, corresponding to the new notes
    * @return list of vertices which represent a delivery note
    */
-  private List<Vertex> newDeliveryNotes(List<Vertex> purchOrders) {
-    List<Vertex> deliveryNotes = Lists.newArrayList();
-    Vertex deliveryNote;
+  private List<EPGMVertex> newDeliveryNotes(List<EPGMVertex> purchOrders) {
+    List<EPGMVertex> deliveryNotes = Lists.newArrayList();
+    EPGMVertex deliveryNote;
     // create one delivery note for each purch order
-    for (Vertex singlePurchOrder : purchOrders) {
+    for (EPGMVertex singlePurchOrder : purchOrders) {
       deliveryNote = newDeliveryNote(singlePurchOrder);
       deliveryNotes.add(deliveryNote);
     }
@@ -568,7 +567,7 @@ public class Brokerage
    * @param purchOrder purch order, corresponding to the new note
    * @return vertex representation of a delivery note
    */
-  private Vertex newDeliveryNote(Vertex purchOrder) {
+  private EPGMVertex newDeliveryNote(EPGMVertex purchOrder) {
     String label = FoodBrokerVertexLabels.DELIVERYNOTE_VERTEX_LABEL;
     Properties properties = new Properties();
 
@@ -598,7 +597,7 @@ public class Brokerage
     properties.set(FoodBrokerPropertyKeys.SOURCEID_KEY, bid);
     properties.set("trackingCode", "***TODO***");
 
-    Vertex deliveryNote = newVertex(label, properties);
+    EPGMVertex deliveryNote = newVertex(label, properties);
 
     // create all relevant edges
     newEdge(FoodBrokerEdgeLabels.CONTAINS_EDGE_LABEL, deliveryNote.getId(), purchOrder.getId());
@@ -614,14 +613,14 @@ public class Brokerage
    *                        invoices
    * @return list of vertices which represent a purch invoice
    */
-  private List<Vertex> newPurchInvoices(List<Edge> purchOrderLines) {
-    Vertex purchOrder;
-    Map<Vertex, BigDecimal> purchOrderTotals = Maps.newHashMap();
+  private List<EPGMVertex> newPurchInvoices(List<EPGMEdge> purchOrderLines) {
+    EPGMVertex purchOrder;
+    Map<EPGMVertex, BigDecimal> purchOrderTotals = Maps.newHashMap();
 
     BigDecimal total;
     BigDecimal purchAmount;
     // calculate to total cost for each purch order
-    for (Edge purchOrderLine : purchOrderLines) {
+    for (EPGMEdge purchOrderLine : purchOrderLines) {
       purchOrder = vertexMap.get(purchOrderLine.getSourceId());
       total = BigDecimal.ZERO;
 
@@ -636,10 +635,10 @@ public class Brokerage
       purchOrderTotals.put(purchOrder, total);
     }
 
-    List<Vertex> purchInvoices = Lists.newArrayList();
+    List<EPGMVertex> purchInvoices = Lists.newArrayList();
 
     // create one invoice for each purch order
-    for (Map.Entry<Vertex, BigDecimal> purchOrderTotal : purchOrderTotals.entrySet()) {
+    for (Map.Entry<EPGMVertex, BigDecimal> purchOrderTotal : purchOrderTotals.entrySet()) {
       purchInvoices.add(newPurchInvoice(
         purchOrderTotal.getKey(),
         purchOrderTotal.getValue()
@@ -656,7 +655,7 @@ public class Brokerage
    * @param total total purch amount
    * @return vertex representation of a purch invoice
    */
-  private Vertex newPurchInvoice(Vertex purchOrder, BigDecimal total) {
+  private EPGMVertex newPurchInvoice(EPGMVertex purchOrder, BigDecimal total) {
     String label = FoodBrokerVertexLabels.PURCHINVOICE_VERTEX_LABEL;
     Properties properties = new Properties();
 
@@ -683,7 +682,7 @@ public class Brokerage
     properties.set(FoodBrokerPropertyKeys.EXPENSE_KEY, total);
     properties.set("text", "*** TODO @ Brokerage ***");
 
-    Vertex purchInvoice = newVertex(label, properties);
+    EPGMVertex purchInvoice = newVertex(label, properties);
 
     // create relevant edge
     newEdge(FoodBrokerEdgeLabels.CREATEDFOR_EDGE_LABEL, purchInvoice.getId(), purchOrder.getId());
@@ -697,9 +696,9 @@ public class Brokerage
    * @param salesOrderLines sales order line, corresponding to the new invoice
    * @return vertex representation of a sales invoice
    */
-  private Vertex newSalesInvoice(List<Edge> salesOrderLines) {
+  private EPGMVertex newSalesInvoice(List<EPGMEdge> salesOrderLines) {
     String label = FoodBrokerVertexLabels.SALESINVOICE_VERTEX_LABEL;
-    Vertex salesOrder = vertexMap.get(salesOrderLines.get(0).getSourceId());
+    EPGMVertex salesOrder = vertexMap.get(salesOrderLines.get(0).getSourceId());
     Properties properties = new Properties();
 
     // calculate and set the properties
@@ -725,12 +724,12 @@ public class Brokerage
     properties.set(FoodBrokerPropertyKeys.REVENUE_KEY, BigDecimal.ZERO);
     properties.set("text", "*** TODO @ Brokerage ***");
 
-    Vertex salesInvoice = newVertex(label, properties);
+    EPGMVertex salesInvoice = newVertex(label, properties);
 
     BigDecimal revenue;
     BigDecimal salesAmount;
     // set the invoices revenue considering all sales order lines
-    for (Edge salesOrderLine : salesOrderLines) {
+    for (EPGMEdge salesOrderLine : salesOrderLines) {
       salesAmount = BigDecimal.valueOf(salesOrderLine.getPropertyValue(
         FoodBrokerPropertyKeys.QUANTITY_KEY).getInt())
         .multiply(

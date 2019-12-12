@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 - 2018 Leipzig University (Database Research Group)
+ * Copyright © 2014 - 2019 Leipzig University (Database Research Group)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,14 +22,14 @@ import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
 import org.apache.flink.api.java.typeutils.TupleTypeInfo;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
-import org.gradoop.common.model.api.entities.EPGMEdgeFactory;
-import org.gradoop.common.model.api.entities.EPGMGraphHeadFactory;
-import org.gradoop.common.model.api.entities.EPGMVertexFactory;
+import org.gradoop.common.model.api.entities.EdgeFactory;
+import org.gradoop.common.model.api.entities.GraphHeadFactory;
+import org.gradoop.common.model.api.entities.VertexFactory;
 import org.gradoop.common.model.impl.id.GradoopId;
 import org.gradoop.common.model.impl.id.GradoopIdSet;
-import org.gradoop.common.model.impl.pojo.Edge;
-import org.gradoop.common.model.impl.pojo.GraphHead;
-import org.gradoop.common.model.impl.pojo.Vertex;
+import org.gradoop.common.model.impl.pojo.EPGMEdge;
+import org.gradoop.common.model.impl.pojo.EPGMGraphHead;
+import org.gradoop.common.model.impl.pojo.EPGMVertex;
 import org.gradoop.flink.model.impl.layouts.transactional.tuples.GraphTransaction;
 import org.gradoop.flink.util.GradoopFlinkConfig;
 
@@ -59,15 +59,15 @@ public class PredictableTransaction implements
   /**
    * graph head factory
    */
-  private final EPGMGraphHeadFactory<GraphHead> graphHeadFactory;
+  private final GraphHeadFactory<EPGMGraphHead> graphHeadFactory;
   /**
    * vertex factory
    */
-  private final EPGMVertexFactory<Vertex> vertexFactory;
+  private final VertexFactory<EPGMVertex> vertexFactory;
   /**
    * edge factory
    */
-  private final EPGMEdgeFactory<Edge> edgeFactory;
+  private final EdgeFactory<EPGMEdge> edgeFactory;
 
   /**
    * constructor
@@ -81,9 +81,9 @@ public class PredictableTransaction implements
 
     this.multigraph = multigraph;
     this.graphSize = graphSize;
-    this.graphHeadFactory = config.getGraphHeadFactory();
-    this.vertexFactory = config.getVertexFactory();
-    this.edgeFactory = config.getEdgeFactory();
+    this.graphHeadFactory = config.getLogicalGraphFactory().getGraphHeadFactory();
+    this.vertexFactory = config.getLogicalGraphFactory().getVertexFactory();
+    this.edgeFactory = config.getLogicalGraphFactory().getEdgeFactory();
   }
 
   @Override
@@ -91,15 +91,15 @@ public class PredictableTransaction implements
 
     Long maxVertexLabelIndex = graphNumber % 10;
 
-    GraphHead graphHead = graphHeadFactory
+    EPGMGraphHead graphHead = graphHeadFactory
       .createGraphHead(String.valueOf(maxVertexLabelIndex));
 
-    Set<Vertex> vertices = Sets.newHashSet();
-    Set<Edge> edges = Sets.newHashSet();
+    Set<EPGMVertex> vertices = Sets.newHashSet();
+    Set<EPGMEdge> edges = Sets.newHashSet();
 
     GradoopIdSet graphIds = GradoopIdSet.fromExisting(graphHead.getId());
 
-    Vertex centerVertex = vertexFactory.createVertex("S", graphIds);
+    EPGMVertex centerVertex = vertexFactory.createVertex("S", graphIds);
     vertices.add(centerVertex);
 
     for (int vertexLabelIndex = 0; vertexLabelIndex <= maxVertexLabelIndex;
@@ -110,10 +110,10 @@ public class PredictableTransaction implements
         addPattern(graphNumber, vertexLabel, centerVertex, vertices, edges);
       }
     }
-    for (Vertex vertex : vertices) {
+    for (EPGMVertex vertex : vertices) {
       vertex.setGraphIds(graphIds);
     }
-    for (Edge edge : edges) {
+    for (EPGMEdge edge : edges) {
       edge.setGraphIds(graphIds);
     }
     return new GraphTransaction(graphHead, vertices, edges);
@@ -131,7 +131,7 @@ public class PredictableTransaction implements
    * @param edges stores created edges
    */
   private void addPattern(long graphNumber, String vertexLabel,
-    Vertex centerVertex, Set<Vertex> vertices, Set<Edge> edges) {
+    EPGMVertex centerVertex, Set<EPGMVertex> vertices, Set<EPGMEdge> edges) {
 
     GradoopId multiBottomId = createVertex(vertexLabel, vertices);
     createEdge(
@@ -181,9 +181,9 @@ public class PredictableTransaction implements
    * @param vertices stores the vertex
    * @return id of the created vertex
    */
-  private GradoopId createVertex(String vertexLabel, Set<Vertex> vertices) {
+  private GradoopId createVertex(String vertexLabel, Set<EPGMVertex> vertices) {
 
-    Vertex vertex = vertexFactory.createVertex(vertexLabel);
+    EPGMVertex vertex = vertexFactory.createVertex(vertexLabel);
     vertices.add(vertex);
     return vertex.getId();
   }
@@ -197,7 +197,7 @@ public class PredictableTransaction implements
    * @param edges stores the edge
    */
   private void createEdge(
-    GradoopId sourceId, String label, GradoopId targetId, Set<Edge> edges) {
+    GradoopId sourceId, String label, GradoopId targetId, Set<EPGMEdge> edges) {
 
     edges.add(edgeFactory.createEdge(label, sourceId, targetId));
   }
