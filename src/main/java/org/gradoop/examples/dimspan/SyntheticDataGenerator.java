@@ -53,7 +53,7 @@ public class SyntheticDataGenerator
    * Main program to run the example. Arguments are the available options.
    *
    * @param args program arguments
-   * @throws Exception
+   * @throws Exception on failure
    */
   @SuppressWarnings("unchecked")
   public static void main(String[] args) throws Exception {

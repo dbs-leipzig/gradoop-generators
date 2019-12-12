@@ -217,7 +217,8 @@ public class ComplaintHandling extends AbstractProcess
     // sales orders, which are late
     for (EPGMVertex deliveryNote : deliveryNotes) {
       if (deliveryNote.getPropertyValue(FoodBrokerPropertyKeys.DATE_KEY).getDate().getLong(ChronoField.ERA) >
-        salesOrder.getPropertyValue(FoodBrokerPropertyKeys.DELIVERYDATE_KEY).getDate().getLong(ChronoField.ERA)) {
+        salesOrder.getPropertyValue(FoodBrokerPropertyKeys.DELIVERYDATE_KEY).getDate()
+          .getLong(ChronoField.ERA)) {
         lateSalesOrderLines.addAll(salesOrderLines);
       }
     }
@@ -231,7 +232,8 @@ public class ComplaintHandling extends AbstractProcess
       }
       Calendar calendar = Calendar.getInstance();
       calendar.setTimeInMillis(
-        salesOrder.getPropertyValue(FoodBrokerPropertyKeys.DELIVERYDATE_KEY).getDate().getLong(ChronoField.ERA));
+        salesOrder.getPropertyValue(FoodBrokerPropertyKeys.DELIVERYDATE_KEY).getDate()
+          .getLong(ChronoField.ERA));
       calendar.add(Calendar.DATE, 1);
       long createdDate = calendar.getTimeInMillis();
 
